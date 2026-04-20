@@ -212,9 +212,9 @@ void BufferedDisplay::update(bool forceFullWidth, bool forceFullHeight)
     this->updateY1 = -1;
     InUpdate = false;
     totalPushTime += (millis() - st);
-    Serial.print("Total Frame took: ");
+    // Serial.print("Total Frame took: ");
+    // Serial.println(millis() - st);
     totalPushTime = 0;
-    Serial.println(millis() - st);
 }
 
 void BufferedDisplay::updateAsync()

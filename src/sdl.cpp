@@ -84,16 +84,16 @@ void draw_task(void *parameter) {
     frame_ready = false;
     tft->drawIndexedBitmap(h_offset, v_offset, frame_buffer, color_palette,
                            DRAW_WIDTH, DRAW_HEIGHT);
-    draw_button(button_up, 30, SCREEN_HEIGHT / 2 - 15);
-    draw_button(button_left, 15, SCREEN_HEIGHT / 2);
-    draw_button(button_right, 45, SCREEN_HEIGHT / 2);
-    draw_button(button_down, 30, SCREEN_HEIGHT / 2 + 15);
+    // draw_button(button_up, 30, SCREEN_HEIGHT / 2 - 15);
+    // draw_button(button_left, 15, SCREEN_HEIGHT / 2);
+    // draw_button(button_right, 45, SCREEN_HEIGHT / 2);
+    // draw_button(button_down, 30, SCREEN_HEIGHT / 2 + 15);
 
-    draw_button(button_select, 30, SCREEN_HEIGHT / 2 + 70, "select");
-    draw_button(button_start, SCREEN_WIDTH - 30, SCREEN_HEIGHT / 2 + 70,
-                "start");
-    draw_button(button_a, SCREEN_WIDTH - 45, SCREEN_HEIGHT / 2, "a");
-    draw_button(button_b, SCREEN_WIDTH - 15, SCREEN_HEIGHT / 2 - 15, "b");
+    // draw_button(button_select, 30, SCREEN_HEIGHT / 2 + 70, "select");
+    // draw_button(button_start, SCREEN_WIDTH - 30, SCREEN_HEIGHT / 2 + 70,
+    //             "start");
+    // draw_button(button_a, SCREEN_WIDTH - 45, SCREEN_HEIGHT / 2, "a");
+    // draw_button(button_b, SCREEN_WIDTH - 15, SCREEN_HEIGHT / 2 - 15, "b");
     tft->update();
   }
 }
@@ -122,8 +122,61 @@ void sdl_init(void) {
                           0); /* Core where the task should run */
 }
 
+
+uint32_t last_input_time = 0;
+uint8_t lastSerialRead = 0;
+
+static void serialRead()
+{
+  button_a = 0;
+  button_b = 0;
+  button_select = 0;
+  button_start = 0;
+  button_up = 0;
+  button_down = 0;
+  button_left = 0;
+  button_right = 0;
+  
+    uint32_t state = 0x00;
+    if (Serial.available()){
+        uint8_t input = Serial.read();
+        //Serial.printf("Serial input: %c (0x%02X)\n", input, input);
+        last_input_time = millis();
+        if (input == '[') state = 1;
+        else if (input == ']') state = 2;
+        else if (input == ';') state = 4;
+        else if (input == '\'') state = 8;
+        else if (input == 'w') state = 16;
+        else if (input == 's') state = 32;
+        else if (input == 'a') state = 64;
+        else if (input == 'd') state = 128;
+        lastSerialRead = state;
+    }
+    else
+    {
+        if(millis() - last_input_time < 100) {
+            state = lastSerialRead;
+        }
+
+    }
+    switch (state)
+    {
+    case 1: button_a = 1; break;
+    case 2: button_b = 1; break;
+    case 4: button_select = 1; break;
+    case 8: button_start = 1; break;
+    case 16: button_up = 1; break;
+    case 32: button_down = 1; break;
+    case 64: button_left = 1; break;
+    case 128: button_right = 1; break;
+    
+    default:
+      break;
+    }
+}
 int sdl_update(void) {
-  // button_up = !gpio_get_level(_up);
+  serialRead();
+  //button_up = !gpio_get_level(_up);
   // button_left = !gpio_get_level(_left);
   // button_down = !gpio_get_level(_down);
   // button_right = !gpio_get_level(_right);
