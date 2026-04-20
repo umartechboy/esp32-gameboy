@@ -8,4 +8,5 @@ void sdl_quit(void);
 uint8_t *sdl_get_framebuffer(void);
 unsigned int sdl_get_buttons(void);
 unsigned int sdl_get_directions(void);
+#define RED 0b11111
 #endif
