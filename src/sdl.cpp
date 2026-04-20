@@ -1,6 +1,6 @@
 #include "sdl.h"
 
-#include <Arduino_GFX_Library.h>
+#include "BufferedDisplay.h"
 
 #include "SPI.h"
 
@@ -23,9 +23,10 @@
 #define _a GPIO_NUM_33
 #define _b GPIO_NUM_32
 
-Arduino_DataBus *bus = new Arduino_ESP32SPI(_dc);
+//Arduino_DataBus *bus = new Arduino_ESP32SPI(_dc);
 // Arduino_DataBus *bus = new Arduino_ESP32SPI(_dc, _cs, _sclk, _mosi, _miso);
-Arduino_GFX *tft = new Arduino_ILI9341(bus, _rst, 3 /* rotation */);
+//Adafruit_GFX *tft = new Arduino_ILI9341(bus, _rst, 3 /* rotation */);
+extern BufferedDisplay *tft;
 
 void backlighting(bool state) {
   if (!state) {
@@ -39,8 +40,8 @@ void backlighting(bool state) {
 #define GAMEBOY_WIDTH 160
 #define DRAW_HEIGHT 144
 #define DRAW_WIDTH 160
-#define SCREEN_HEIGHT 240
-#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 144
+#define SCREEN_WIDTH 160
 
 #define SPI_FREQ 40000000
 
@@ -65,7 +66,7 @@ void draw_button(bool value, int x_pos, int y_pos,
     int width = char_len * len;
     for (int i = 0; i < len; ++i) {
       tft->drawChar(x_pos - width / 2 + char_len * i, y_pos + 20, label[i],
-                    0xffff, RED);
+                    0xffff, RED, 1);
     }
   }
 }
@@ -93,24 +94,25 @@ void draw_task(void *parameter) {
                 "start");
     draw_button(button_a, SCREEN_WIDTH - 45, SCREEN_HEIGHT / 2, "a");
     draw_button(button_b, SCREEN_WIDTH - 15, SCREEN_HEIGHT / 2 - 15, "b");
+    tft->update();
   }
 }
 
 void sdl_init(void) {
   frame_buffer = new uint8_t[DRAW_WIDTH * DRAW_HEIGHT];
   // GFX_EXTRA_PRE_INIT();
-  tft->begin(SPI_FREQ);
-  pinMode(_led, OUTPUT);
-  backlighting(true);
+  //tft->begin(SPI_FREQ);
+  //pinMode(_led, OUTPUT);
+  //backlighting(true);
   tft->fillScreen(RED);
-
+  tft->update();
   gpio_num_t gpios[] = {_left, _right, _down, _up, _start, _select, _a, _b};
-  for (gpio_num_t pin : gpios) {
-    gpio_pad_select_gpio(pin);
-    gpio_set_direction(pin, GPIO_MODE_INPUT);
-    // uncomment to use builtin pullup resistors
-    //    gpio_set_pull_mode(pin, GPIO_PULLUP_ONLY);
-  }
+  // for (gpio_num_t pin : gpios) {
+  //   gpio_pad_select_gpio(pin);
+  //   gpio_set_direction(pin, GPIO_MODE_INPUT);
+  //   // uncomment to use builtin pullup resistors
+  //   //    gpio_set_pull_mode(pin, GPIO_PULLUP_ONLY);
+  // }
   xTaskCreatePinnedToCore(draw_task,  /* Function to implement the task */
                           "drawTask", /* Name of the task */
                           10000,      /* Stack size in words */
@@ -121,16 +123,16 @@ void sdl_init(void) {
 }
 
 int sdl_update(void) {
-  button_up = !gpio_get_level(_up);
-  button_left = !gpio_get_level(_left);
-  button_down = !gpio_get_level(_down);
-  button_right = !gpio_get_level(_right);
+  // button_up = !gpio_get_level(_up);
+  // button_left = !gpio_get_level(_left);
+  // button_down = !gpio_get_level(_down);
+  // button_right = !gpio_get_level(_right);
 
-  button_start = !gpio_get_level(_start);
-  button_select = !gpio_get_level(_select);
+  // button_start = !gpio_get_level(_start);
+  // button_select = !gpio_get_level(_select);
 
-  button_a = !gpio_get_level(_a);
-  button_b = !gpio_get_level(_b);
+  // button_a = !gpio_get_level(_a);
+  // button_b = !gpio_get_level(_b);
   sdl_frame();
   return 0;
 }

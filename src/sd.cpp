@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 #include "esp_vfs_fat.h"
-#include "sdmmc_cmd.h"
+#include "GB_SD.h"
 
 #define SD_CS GPIO_NUM_16
 #define SD_MISO GPIO_NUM_12
@@ -11,6 +11,7 @@
 #define SD_CLK GPIO_NUM_14
 
 void sd_init() {
+#if SD_TYPE == SD_TYPE_SD
   pinMode(SD_CS, OUTPUT);
   digitalWrite(SD_CS, HIGH);
   esp_err_t ret;
@@ -63,8 +64,26 @@ void sd_init() {
   }
   printf("SD filesystem mounted\n");
 
+
   // Card has been initialized, print its properties
   sdmmc_card_print_info(stdout, card);
+  #else
+
+    Serial.println("Initializing LittleFS...");
+    if (!LittleFS.begin())
+    
+        Serial.println("SD Card Mount Failed");
+        LittleFS.format();
+        Serial.println("SD Card formatted");
+        #if SD_TYPE != SD_TYPE_SD
+        if (!LittleFS.begin()) {
+            Serial.println("LittleFS mount failed after format");
+        } else {
+            Serial.println("LittleFS mounted after format");
+        }
+        #endif
+        return;
+  #endif
 }
 
 void sd_list_files() {}

@@ -44,6 +44,9 @@ void BufferedDisplay::drawPixel(int16_t x, int16_t y, Color color){
 }
 void BufferedDisplay::drawPixel(int16_t x, int16_t y, uint16_t color)
 {
+    // apply screen scaling
+    x = (x * 128) / 160;
+    y = (y * 128) / 144;
     x += xOffset;
     y += yOffset;
     if (drawOpacity == 0){        
@@ -435,3 +438,66 @@ int16_t BufferedDisplay::textWidth(const char *string, uint8_t font)
 }
 
 
+/**************************************************************************/
+/*!
+  @brief  Draw a Indexed 16-bit image (RGB 5/6/5) at the specified (x,y) position.
+  @param  x           Top left corner x coordinate
+  @param  y           Top left corner y coordinate
+  @param  bitmap      byte array of Indexed color bitmap
+  @param  color_index byte array of 16-bit color index
+  @param  w           Width of bitmap in pixels
+  @param  h           Height of bitmap in pixels
+  @param  x_skip      number of pixels required to skip for every bitmap row
+*/
+/**************************************************************************/
+void BufferedDisplay::drawIndexedBitmap(
+    int16_t x, int16_t y,
+    uint8_t *bitmap, uint16_t *color_index, int16_t w, int16_t h, int16_t x_skip)
+{
+  int32_t offset = 0;
+  startWrite();
+  for (int16_t j = 0; j < h; j++, y++)
+  {
+    for (int16_t i = 0; i < w; i++)
+    {
+      writePixel(x + i, y, color_index[bitmap[offset++]]);
+    }
+    offset += x_skip;
+  }
+  endWrite();
+}
+
+/**************************************************************************/
+/*!
+  @brief  Draw a Indexed 16-bit image (RGB 5/6/5) at the specified (x,y) position.
+  @param  x           Top left corner x coordinate
+  @param  y           Top left corner y coordinate
+  @param  bitmap      byte array of Indexed color bitmap
+  @param  color_index byte array of 16-bit color index
+  @param  chroma_key  transparent color index
+  @param  w           Width of bitmap in pixels
+  @param  h           Height of bitmap in pixels
+  @param  x_skip      number of pixels required to skip for every bitmap row
+*/
+/**************************************************************************/
+void BufferedDisplay::drawIndexedBitmap(
+    int16_t x, int16_t y,
+    uint8_t *bitmap, uint16_t *color_index, uint8_t chroma_key, int16_t w, int16_t h, int16_t x_skip)
+{
+  int32_t offset = 0;
+  uint8_t color_key;
+  startWrite();
+  for (int16_t j = 0; j < h; j++, y++)
+  {
+    for (int16_t i = 0; i < w; i++)
+    {
+      color_key = bitmap[offset++];
+      if (color_key != chroma_key)
+      {
+        writePixel(x + i, y, color_index[color_key]);
+      }
+    }
+    offset += x_skip;
+  }
+  endWrite();
+}
